@@ -1,4 +1,4 @@
-**Code drafted by Dylan VanDerWal ([dylanjvanderwal@gmail.com](Contact) [https://dylanvanderwal.moe](Website))**
+**Code drafted by Dylan VanDerWal (dylanjvanderwal@gmail.com [Website](https://dylanvanderwal.moe))**
 Code for sand dunes sensor
 Board used: D1 mini Pro
 Pins:
