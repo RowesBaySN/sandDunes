@@ -10,13 +10,11 @@ const int microphonePin = A0;
 SFE_BMP180 pressure;
 #define ALTITUDE 20.0
 
-
-const char* ssid = "TEHS_297D59";
-const char* password = "8847C9C512";
-
+const char* ssid = "TCC-Sensors";
+const char* password = "5Birds+Feathers";
+const char* nodeID = "sandDunes";
 
 void connectWiFi();
-
 
 long lastConnectionTime = 0;
 int sound_max = 0;
@@ -25,7 +23,6 @@ long sound_sum = 0;
 int sound_sample;
 int updateInterval = 1*60000;
 
-Initial running script
 void setup() {
 	Serial.begin(115200);
 	delay(10);
@@ -43,25 +40,24 @@ void loop(){
 	sound_sum += sound_sample;
 	sound_count += 1;
 
-	if (millis() - lastConnectionTime > updateInteval){
-		String postData = ("");
+	if (millis() - lastConnectionTime > updateInterval){
+		String postData = ("id="+String(nodeID));
 
-		float h = dht_0.readHumidity();
-		float t = dht_0.readTemperature();
+		float h = dht.readHumidity();
+		float t = dht.readTemperature();
 		if (isnan(h) || isnan(t)) {
-      Serial.println("Failed to read from DHT sensor!");
-      return;
-    } else {
-      String S1 = String(h);
-      String S2 = String(t);
-      postData += ("field1=" + S1 + "&field2=" + S2);
+			Serial.println("Failed to read from DHT sensor!");
+			return;
+		} else {
+			String S1 = String(h);
+			String S2 = String(t);
+			postData += ("&humidity=" + S1 + "&temperature=" + S2);
 		}
 
 		Serial.println(sound_count);
-    String S3 = String(round(sound_sum / sound_count));
-    String S4 = String(sound_max);
-    if (postData != "") { postData += ("&"); }
-    postData += ("field3=" + S3 + "&field4=" + S4);
+		String S3 = String(round(sound_sum / sound_count));
+		String S4 = String(sound_max);
+		postData += ("&soundAverage=" + S3 + "&soundMax=" + S4);
 		sound_sum = 0; sound_max = 0; sound_count = 0;
 
 		char status;
@@ -80,7 +76,7 @@ void loop(){
 						String S6 = String(p0);
 						String S7 = String(T);
 						if (postData != "") { postData += ("&"); }
-						postData += ("field6=" + S6 + "&field7=" + S7);
+						postData += ("barometricPressure=" + S6 + "tempBaro=" + S7);
 					}
 				}
 			}
@@ -88,29 +84,36 @@ void loop(){
 
 		Serial.println(postData);
 
-		//Send Data Code here
-
+    WiFiClient client;
+		if (client.connect("159.89.117.177", 8080)) {
+			Serial.println("connected");
+			client.println("GET /?"+postData);
+			client.println("Host: 159.89.117.177");
+			client.println("Connection: close");
+			client.println();
+		}
 
 		lastConnectionTime = millis();
 	}
 	delay(5);
 }
+
 void connectWiFi() {
-  delay(10);
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+	delay(10);
+	Serial.println();
+	Serial.print("Connecting to ");
+	Serial.println(ssid);
 
-  WiFi.begin(ssid, password);
+	WiFi.begin(ssid, password);
 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
+	while (WiFi.status() != WL_CONNECTED) {
+		delay(500);
+		Serial.print(".");
+	}
 
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  Serial.println();
+	Serial.println("");
+	Serial.println("WiFi connected");
+	Serial.println("IP address: ");
+	Serial.println(WiFi.localIP());
+	Serial.println();
 }
